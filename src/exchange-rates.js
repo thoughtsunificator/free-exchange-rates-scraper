@@ -62,7 +62,7 @@ class ExchangeRates {
 						this.logger.log(`[exchange-rate] Rate for ${fromCurrency.code} to ${toCurrency.code} is ${value}...`)
 						await this.collection.updateOne({ from: fromCurrency.code, to: toCurrency.code }, { $set: { value: parseFloat(value), date: new Date() } }, { upsert: true })
 					} else {
-						this.logger.error(`[exchange-rate Could not retrieve rate for ${fromCurrency.code}(${fromCurrency.freebase}) to ${toCurrency.code}(${toCurrency.freebase})`)
+						this.logger.error(`[exchange-rate Could not retrieve rate for ${fromCurrency.code} to ${toCurrency.code}`)
 					}
 				}
 
