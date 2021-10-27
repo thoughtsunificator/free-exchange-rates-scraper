@@ -31,7 +31,7 @@ const collection = database.collection("rates")
 			const url = `https://www.google.com/async/currency_v2_update?async=source_amount:1,source_currency:${fromCurrency.freebase},target_currency:${toCurrency.freebase},lang:en,country:fr,disclaimer_url:https://www.google.com/intl/en/googlefinance/disclaimer/,period:1M,interval:86400,_id:currency-v2-updatable_27,_pms:s,_fmt:pc`
 			const response = await fetch(url)
 			const text = await response.text()
-			const match = text.match(/data-value="([0-9.]+)"/)
+			const match = text.match(/data-value="([^"]+)"/)
 			if(match) {
 				const value = parseFloat(match[1])
 				logger.log(`[exchange-rate] Rate for ${fromCurrency.code} to ${toCurrency.code} is ${value}...`)
