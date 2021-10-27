@@ -1,8 +1,7 @@
 import tracer from "tracer"
 import MongoDB from "mongodb"
 import fetch from "node-fetch"
-
-import config from "./lib/config.js"
+import config from "@thoughtsunificator/config-env"
 
 import CURRENCIES_MAP from "./data/currencies_map.js"
 

@@ -15,6 +15,7 @@
 		"dev": "nodemon server.js"
 	},
 	"dependencies": {
+		"@thoughtsunificator/config-env": "^1.0.3",
 		"chalk": "^4.1.2",
 		"forever": "^4.0.1",
 		"mongodb": "^4.1.3",
