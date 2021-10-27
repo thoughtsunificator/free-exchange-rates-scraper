@@ -50,7 +50,14 @@ class ExchangeRates {
 				for(const toCurrency of CURRENCIES_MAP.filter(currency => currency.code !== fromCurrency.code)) {
 					this.logger.log(`[exchange-rate] Retrieving rate for ${fromCurrency.code} => ${toCurrency.code}`)
 					await this.page.goto(`https://www.google.com/search?q=${1}+${fromCurrency.code} to ${toCurrency.code}`, { waitUntil: 'networkidle2' })
-					const value = await this.page.evaluate(() => document.querySelector('span[data-value]').getAttribute("data-value"))
+					const value = await this.page.evaluate(() => {
+						const spanNode = document.querySelector('span[data-value]')
+						if(spanNode) {
+							return spanNode.getAttribute("data-value")
+						} else {
+							return null
+						}
+					})
 					if(value) {
 						this.logger.log(`[exchange-rate] Rate for ${fromCurrency.code} to ${toCurrency.code} is ${value}...`)
 						await this.collection.updateOne({ from: fromCurrency.code, to: toCurrency.code }, { $set: { value: parseFloat(value), date: new Date() } }, { upsert: true })
