@@ -53,14 +53,19 @@ class ExchangeRates {
 					const value = await this.page.evaluate(() => {
 						const spanNode = document.querySelector('span[data-value]')
 						if(spanNode) {
-							return spanNode.getAttribute("data-value")
+							const value = spanNode.getAttribute("data-value")
+							if(value && !isNaN(value.trim())) {
+								return parseFloat(value)
+							} else {
+								return null
+							}
 						} else {
 							return null
 						}
 					})
 					if(value) {
 						this.logger.log(`[exchange-rate] Rate for ${fromCurrency.code} to ${toCurrency.code} is ${value}...`)
-						await this.collection.updateOne({ from: fromCurrency.code, to: toCurrency.code }, { $set: { value: parseFloat(value), date: new Date() } }, { upsert: true })
+						await this.collection.updateOne({ from: fromCurrency.code, to: toCurrency.code }, { $set: { value, date: new Date() } }, { upsert: true })
 					} else {
 						this.logger.error(`[exchange-rate Could not retrieve rate for ${fromCurrency.code} to ${toCurrency.code}`)
 					}
