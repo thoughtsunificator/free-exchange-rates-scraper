@@ -1,10 +1,10 @@
-import puppeteer from "puppeteer"
 import tracer from "tracer"
 import MongoDB from "mongodb"
+import fetch from "node-fetch"
 
 import config from "./lib/config.js"
 
-import ExchangeRates from "./src/exchange-rates.js"
+import CURRENCIES_MAP from "./data/currencies_map.js"
 
 const consoleLogger = tracer.colorConsole({	format : "{{message}}" })
 
@@ -24,20 +24,24 @@ const client = await MongoDB.MongoClient.connect(config.DATABASE_URL, { useUnifi
 const database = client.db(config.DATABASE_NAME)
 const collection = database.collection("rates")
 
-const browser = await puppeteer.launch({
-	headless: true,
-	args: [
-		"--no-sandbox",
-		"--disable-setuid-sandbox",
-		"--ignore-certificate-errors"
-	]
-})
-
-const exchangeRates = new ExchangeRates(browser, logger, collection)
-await exchangeRates.load()
-
 ;(async function refreshRates() {
-	await exchangeRates.retrieveRates()
-	this.logger.log(`[exchange-rate] Rates will be refreshed in 5 minutes`)
+
+	for(const fromCurrency of CURRENCIES_MAP) {
+		for(const toCurrency of CURRENCIES_MAP.filter(currency => currency.code !== fromCurrency.code)) {
+			const url = `https://www.google.com/async/currency_v2_update?async=source_amount:1,source_currency:${fromCurrency.freebase},target_currency:${toCurrency.freebase},lang:en,country:fr,disclaimer_url:https://www.google.com/intl/en/googlefinance/disclaimer/,period:1M,interval:86400,_id:currency-v2-updatable_27,_pms:s,_fmt:pc`
+			const response = await fetch(url)
+			const text = await response.text()
+			const match = text.match(/data-value="([0-9.]+)"/)
+			if(match) {
+				const value = parseFloat(match[1])
+				logger.log(`[exchange-rate] Rate for ${fromCurrency.code} to ${toCurrency.code} is ${value}...`)
+				await collection.updateOne({ from: fromCurrency.code, to: toCurrency.code }, { $set: { value, date: new Date() } }, { upsert: true })
+			} else {
+				logger.error(`[exchange-rate] Could not retrieve rate for ${fromCurrency.code} to ${toCurrency.code}`)
+			}
+		}
+	}
+
+	logger.log(`[exchange-rate] Rates will be refreshed in 5 minutes`)
 	setTimeout(() => refreshRates(), 5 * 60000)
 })()
